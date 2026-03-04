@@ -1,0 +1,26 @@
+# Compiled Object files
+*.o
+*.obj
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Static and Dynamic Libraries
+*.lib
+*.a
+*.dll
+*.so
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install/
+compile_commands.json
+build/
+out/
