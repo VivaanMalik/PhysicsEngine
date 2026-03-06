@@ -99,7 +99,7 @@ int main() {
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
-        // isPaused = collisionHandler.handleCollisions(bodies, renderer);
+        isPaused = collisionHandler.handleCollisions(bodies, renderer);
         
         glfwSwapBuffers(window);
         glfwPollEvents();

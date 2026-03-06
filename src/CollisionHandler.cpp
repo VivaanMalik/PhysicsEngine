@@ -34,29 +34,6 @@ namespace PhysicsEngine {
         return {min, max};
     }
 
-    std::vector<Vector2> CollisionHandler::clip(const std::vector<Vector2>& points, Vector2 normal, float offset) {
-        std::vector<Vector2> out;
-        if (points.empty()) return out;
-        for (size_t i = 0; i < points.size(); ++i) {
-            Vector2 v1 = points[i];
-            Vector2 v2 = points[(i + 1) % points.size()]; // Loop back to start for closed shapes
-
-            float d1 = PhysicsEngine::Vector2Dot(normal, v1) - offset;
-            float d2 = PhysicsEngine::Vector2Dot(normal, v2) - offset;
-
-            // If the start point is "inside" the plane, keep it
-            if (d1 >= 0) out.push_back(v1);
-
-            // If the segment crosses the plane, calculate and add the intersection point
-            if (d1 * d2 < 0) {
-                float t = d1 / (d1 - d2);
-                Vector2 intersection = v1 + (v2 - v1) * t;
-                out.push_back(intersection);
-            }
-        }
-        return out;
-    }
-
     Edge CollisionHandler::getBestEdge(const std::vector<Vector2>& normals, const std::vector<Vector2>& vertices, Vector2 targetnormal) {
         float maxDot = -std::numeric_limits<float>::infinity();
         int indx = 0;
@@ -72,6 +49,27 @@ namespace PhysicsEngine {
 
         }
         return {vertices[indx], vertices[(indx+1)%len]};
+    }
+
+    std::vector<Vector2> CollisionHandler::clipEdgeFromNormal(Edge edge, Vector2 normal, Vector2 offset) {
+        float dot1 =  PhysicsEngine::Vector2Dot(edge.v1-offset, normal);
+        float dot2 =  PhysicsEngine::Vector2Dot(edge.v2-offset, normal);
+
+        bool dirn1 = dot1>=0.0f;
+        bool dirn2 = dot2>=0.0f;
+
+        std::vector<Vector2> clippedPoints;
+        if (dirn1) clippedPoints.push_back(edge.v1); 
+        if (dirn2) clippedPoints.push_back(edge.v2);
+
+        // atp either 0, 1, 2. If 1, we want intersection pt
+        if (dirn1*dirn2==0 && clippedPoints.size()<2) {
+            // find intersection pt
+            Vector2 intersectionPt = edge.v2 + (edge.v1-edge.v2) * (dot2/(dot2-dot1));
+            clippedPoints.push_back(intersectionPt);
+        }
+
+        return clippedPoints;
     }
 
     CollisionData CollisionHandler::checkSAT(Rigidbody2D* a, Rigidbody2D* b) {
@@ -115,23 +113,18 @@ namespace PhysicsEngine {
         Vector2 v2 = refEdge.v2;
         Vector2 edgeDirn = PhysicsEngine::Vector2Norm(v2 - v1);
 
-        std::vector<Vector2> clippedPoints = {incEdge.v1, incEdge.v2};
+        std::vector<Vector2> clippedPoints = clipEdgeFromNormal(incEdge, edgeDirn, v1);
+        if (clippedPoints.size()==0) return cData;
 
-        clippedPoints = clip(clippedPoints, -edgeDirn, PhysicsEngine::Vector2Dot(-edgeDirn, v1));
-        if (clippedPoints.size() < 2) return cData;
+        clippedPoints = clipEdgeFromNormal({clippedPoints[0], clippedPoints[1]}, -edgeDirn, v2);
+        if (clippedPoints.size()==0) return cData;
 
-        clippedPoints = clip(clippedPoints, edgeDirn, PhysicsEngine::Vector2Dot(edgeDirn, v2));
-        if (clippedPoints.size() < 2) return cData;
+        clippedPoints = clipEdgeFromNormal({clippedPoints[0], clippedPoints[1]}, -collisionNormal, v1);
 
-        Vector2 refNormal = {-edgeDirn.y, edgeDirn.x}; // The normal of the edge itself
-        float maxDepth = PhysicsEngine::Vector2Dot(refNormal, v1);
-
-        for (Vector2 p : clippedPoints) {
-            float depth = PhysicsEngine::Vector2Dot(refNormal, p) - maxDepth;
-            if (depth <= 0) {
-                cData.contactPoint.push_back({p, depth});
-            }
+        for (int i = 0; i < clippedPoints.size(); i++) {
+            cData.contactPoint.push_back({clippedPoints[i], -(PhysicsEngine::Vector2Dot(clippedPoints[i]-v1, collisionNormal))});
         }
+
         return cData;
     }
 }
