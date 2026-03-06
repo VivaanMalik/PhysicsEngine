@@ -1,6 +1,9 @@
 #include "PhysicsEngine/Renderer.h"
 #include "PhysicsEngine/structs.h"
 #include "PhysicsEngine/Constants.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,12 +31,24 @@ namespace PhysicsEngine {
         return buffer.str() + "\0";
     }
 
-    void Renderer::init(PhysicsEngine::WorldBoundaries wb) { // bottom left is (-1, -1)
+    Vector2 Renderer::worldToPixels(Vector2 worldCoord) {
+        float x_pct = (worldCoord.x - world.left) / (world.right - world.left);
+        float y_pct = (worldCoord.y - world.bottom) / (world.top - world.bottom);
+
+        return {
+            x_pct * windowsize.x,           // X stays normal
+            (1.0f - y_pct) * windowsize.y   // Flip Y: 1.0 (top) becomes 0, 0.0 (bottom) becomes windowHeight
+        };
+    }
+
+    void Renderer::init(PhysicsEngine::WorldBoundaries wb, Vector2 screen) { // bottom left is (-1, -1)
         // glm::ortho(left, right, bottom, top, zNear, zFar)
         projection = glm::ortho(wb.left, wb.right, wb.bottom, wb.top, -1.0f, 1.0f);
+        world = wb;
+        windowsize = screen;
 
-        std::string vertexShaderCode = readFile("../shaders/basic.vert");
-        std::string fragmentShaderCode = readFile("../shaders/basic.frag");
+        std::string vertexShaderCode = readFile("shaders/basic.vert");
+        std::string fragmentShaderCode = readFile("shaders/basic.frag");
 
         const char* vertexShaderSource = vertexShaderCode.c_str();
         const char* fragmentShaderSource = fragmentShaderCode.c_str();
@@ -112,8 +127,6 @@ namespace PhysicsEngine {
         std::cout << data << std::endl;
         if (!data.collided || data.contactPoint.empty()) return;
 
-        std::cout << "rendering" << std::endl;
-
         std::vector<Vector2> points;
         std::vector<Particle> particlePoints;
         for (const auto& cp : data.contactPoint) {
@@ -147,7 +160,7 @@ namespace PhysicsEngine {
         // glDrawArrays(GL_POINTS, 0, points.size());
     }
 
-    void Renderer::drawRigidbody2D(const std::vector<Rigidbody2D>& rigidbody2Ds) {
+    void Renderer::drawRigidbody2D(const std::vector<Rigidbody2D>& rigidbody2Ds, bool labelVertices) {
         glUseProgram(shaderProgram);
 
         int projLoc = glGetUniformLocation(shaderProgram, "projection");
@@ -164,15 +177,54 @@ namespace PhysicsEngine {
             model = glm::rotate(model, body.angPos, glm::vec3(0.0f, 0.0f, 1.0f));
             
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glBindVertexArray(body.VAO); 
-            
-            // glLineWidth(PhysicsEngine::Constants::THICCSIZE);
-            // glUniform4f(colorLoc, PhysicsEngine::Constants::COLORR, PhysicsEngine::Constants::COLORG, PhysicsEngine::Constants::COLORB, 0.3f); 
-            // glDrawArrays(GL_LINE_LOOP, 0, body.localVertices.size());
+            glBindVertexArray(body.VAO);
             
             glLineWidth(PhysicsEngine::Constants::THINSIZE);
             glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 0.8f); // Neon Blue Alpha
             glDrawArrays(GL_LINE_LOOP, 0, body.localVertices.size());
+        }
+        if (labelVertices) {
+            if (ImGui::GetCurrentContext() == nullptr) {
+                std::cout << "ERROR: NO ImGui CONTEXT" << std::endl;
+                return;
+            }
+
+            ImGui::Begin("DebugOverlay", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground);
+            
+            for (const auto& body : rigidbody2Ds) {
+                if (body.worldVertices.empty() || body.worldVertices.size() != body.worldNormals.size()) {
+                    std::cout << "n(worldVertices): " << body.worldVertices.size() << ", n(worldNormals): " << body.worldNormals.size() << std::endl;
+                    continue; 
+                }
+
+                for (size_t i = 0; i < body.worldVertices.size(); ++i) {
+                    Vector2 v = body.worldVertices[i];
+                    
+                    // Draw Vertex Index
+                    std::string label = std::to_string(i);
+                    Vector2 vPixelPos = worldToPixels(v);
+                    ImGui::GetForegroundDrawList()->AddText(
+                        ImVec2(vPixelPos.x, vPixelPos.y), 
+                        IM_COL32(255, 255, 0, 255), 
+                        label.c_str()
+                    );
+                    
+                    // Draw Normals
+                    Vector2 nextV = body.worldVertices[(i + 1) % body.worldVertices.size()];
+                    Vector2 nextVPixelPos = worldToPixels(nextV);
+                    Vector2 mid = {(vPixelPos.x + nextVPixelPos.x) / 2.0f, (vPixelPos.y + nextVPixelPos.y) / 2.0f};
+                    
+                    // Double check index i is safe for worldNormals
+                    Vector2 n = body.worldNormals[i]*20.0f; 
+                    
+                    ImGui::GetForegroundDrawList()->AddLine(
+                        ImVec2(mid.x, mid.y), 
+                        ImVec2(mid.x + n.x, mid.y - n.y), 
+                        IM_COL32(0, 255, 255, 255)
+                    );
+                }
+            }
+            ImGui::End();
         }
     }
 
@@ -180,6 +232,9 @@ namespace PhysicsEngine {
         glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
         glDeleteProgram(shaderProgram);
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
     }
 
     // Helper to compile shaders and print errors

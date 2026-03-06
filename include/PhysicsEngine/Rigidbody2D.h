@@ -47,7 +47,7 @@ namespace PhysicsEngine {
                 Vector2 p1 = localVertices[i];
                 Vector2 p2 = localVertices[(i + 1) % localVertices.size()]; // handle 0 in loop
                 Vector2 edge = { p2.x - p1.x, p2.y - p1.y };
-                Vector2 n = { -edge.y, edge.x }; // normal
+                Vector2 n = { edge.y, -edge.x }; // normal
                 
                 float len = std::sqrt(n.x * n.x + n.y * n.y); // normalize
                 localNormals.push_back({ n.x / len, n.y / len });

@@ -2,6 +2,7 @@
 #include "PhysicsEngine/Constants.h"
 #include "PhysicsEngine/structs.h"
 #include <math.h>
+#include <iostream>
 
 namespace PhysicsEngine {
     void Rigidbody2D::update(float dt, const PhysicsEngine::WorldBoundaries& bounds) {
@@ -17,7 +18,7 @@ namespace PhysicsEngine {
         angVel+=angNetaccn*dt;
         angPos+=angVel*dt;
 
-        if (velocity.x > PhysicsEngine::Constants::EPSILON || velocity.y > PhysicsEngine::Constants::EPSILON || angVel > PhysicsEngine::Constants::EPSILON) {
+        if (abs(velocity.x) > PhysicsEngine::Constants::EPSILON || abs(velocity.y) > PhysicsEngine::Constants::EPSILON || abs(angVel) > PhysicsEngine::Constants::EPSILON) {
             updateWorldVertices();
         }
 

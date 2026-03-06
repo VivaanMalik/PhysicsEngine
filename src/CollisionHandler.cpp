@@ -2,6 +2,7 @@
 #include "PhysicsEngine/structs.h"
 #include "PhysicsEngine/Renderer.h"
 #include <limits>
+#include <iostream>
 
 namespace PhysicsEngine {
     bool CollisionHandler::handleCollisions(std::vector<Rigidbody2D>& bodies, PhysicsEngine::Renderer renderer) {
