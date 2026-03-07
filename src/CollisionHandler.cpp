@@ -16,7 +16,7 @@ namespace PhysicsEngine {
                 if (data.collided) {
                     renderer.drawContactPoints(data);
                     collision = true;
-                    // resolveCollision(a, b, data);
+                    resolveCollision(a, b, data);
                 }
             }
         }
@@ -126,5 +126,29 @@ namespace PhysicsEngine {
         }
 
         return cData;
+    }
+
+    void CollisionHandler::resolveCollision(Rigidbody2D* a, Rigidbody2D* b, CollisionData collisionData) {
+        for (int i = 0; i < collisionData.contactPoint.size(); i++) {
+            Vector2 ra = collisionData.contactPoint[i].position-a->position;
+            Vector2 rb = collisionData.contactPoint[i].position-b->position;
+            Vector2 va = a->velocity+(((Vector2){-ra.y, ra.x})*a->angVel);
+            Vector2 vb = b->velocity+(((Vector2){-rb.y, rb.x})*b->angVel);
+            Vector2 vrel = vb-va;
+
+            if (PhysicsEngine::Vector2Dot(vrel, collisionData.normal) > 0) return;
+
+            float e = 1.0f;
+
+            float j =  -(1+e)*PhysicsEngine::Vector2Dot(vrel, collisionData.normal);
+            float raxn = Vector2Cross(ra, collisionData.normal);
+            float rbxn = Vector2Cross(rb, collisionData.normal);
+            j/=(a->invMass+b->invMass+(raxn*raxn*a->invMomentInertia)+(rbxn*rbxn*b->invMomentInertia));
+            Vector2 Impulse = collisionData.normal * j;
+            a->velocity-=Impulse*a->invMass;
+            a->angVel-=PhysicsEngine::Vector2Cross(ra, Impulse)*a->invMomentInertia;
+            b->velocity+=Impulse*b->invMass;
+            b->angVel+=PhysicsEngine::Vector2Cross(rb, Impulse)*b->invMomentInertia;
+        }
     }
 }

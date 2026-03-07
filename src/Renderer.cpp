@@ -128,36 +128,36 @@ namespace PhysicsEngine {
         if (!data.collided || data.contactPoint.empty()) return;
 
         std::vector<Vector2> points;
-        std::vector<Particle> particlePoints;
+        // std::vector<Particle> particlePoints;
         for (const auto& cp : data.contactPoint) {
             points.push_back(cp.position);
-            Particle p = {1, cp.position, {0, 0}, {0, 0}};
-            particlePoints.push_back(p);
-            std::cout << p << std::endl;
+            // Particle p = {1, cp.position, {0, 0}, {0, 0}};
+            // particlePoints.push_back(p);
+            // std::cout << p << std::endl;
         }
 
-        this->drawParticles(particlePoints);
+        // this->drawParticles(particlePoints);
 
-        // glUseProgram(shaderProgram);
-        // int projLoc = glGetUniformLocation(shaderProgram, "projection");
-        // glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glUseProgram(shaderProgram);
+        int projLoc = glGetUniformLocation(shaderProgram, "projection");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        // int modelLoc = glGetUniformLocation(shaderProgram, "model");
-        // glm::mat4 identity = glm::mat4(1.0f);
-        // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(identity));
+        int modelLoc = glGetUniformLocation(shaderProgram, "model");
+        glm::mat4 identity = glm::mat4(1.0f);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(identity));
 
-        // int sizeLoc = glGetUniformLocation(shaderProgram, "pointSize");
-        // glUniform1f(sizeLoc, 100.0f);
+        int sizeLoc = glGetUniformLocation(shaderProgram, "pointSize");
+        glUniform1f(sizeLoc, 25.0f);
 
-        // int colorLoc = glGetUniformLocation(shaderProgram, "objectColor");
-        // glUniform4f(colorLoc, 1.0f, 0.0f, 0.0f, 0.8f); 
+        int colorLoc = glGetUniformLocation(shaderProgram, "objectColor");
+        glUniform4f(colorLoc, 1.0f, 0.0f, 0.0f, 1.0f); 
 
-        // glBindVertexArray(debugVAO); 
-        // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        // glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(Vector2), points.data(), GL_DYNAMIC_DRAW);
+        glBindVertexArray(debugVAO); 
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(Vector2), points.data(), GL_DYNAMIC_DRAW);
 
-        // // Draw as GL_POINTS
-        // glDrawArrays(GL_POINTS, 0, points.size());
+        // Draw as GL_POINTS
+        glDrawArrays(GL_POINTS, 0, points.size());
     }
 
     void Renderer::drawRigidbody2D(const std::vector<Rigidbody2D>& rigidbody2Ds, bool labelVertices) {

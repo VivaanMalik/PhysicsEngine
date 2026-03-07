@@ -53,7 +53,7 @@ int main() {
     };
 
     std::vector<PhysicsEngine::Rigidbody2D> bodies = {
-        {1200, {4, 5}, {10, 10}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0.1, PhysicsEngine::Shapes::Square},
+        {1, {4, 5}, {10, 10}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0.1, PhysicsEngine::Shapes::Square},
         {1, {10, 8}, {0, 0}, {0, 0}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
         {1, {2, 10}, {0, 0}, {0, 0}, 1, 0, 0.1, 0, PhysicsEngine::Shapes::Square}
     };
@@ -93,13 +93,13 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         
-        renderer.drawParticles(particles);
         renderer.drawRigidbody2D(bodies, true);
+        renderer.drawParticles(particles);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
-        isPaused = collisionHandler.handleCollisions(bodies, renderer);
+        collisionHandler.handleCollisions(bodies, renderer);
         
         glfwSwapBuffers(window);
         glfwPollEvents();
