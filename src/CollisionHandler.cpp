@@ -138,17 +138,24 @@ namespace PhysicsEngine {
 
             if (PhysicsEngine::Vector2Dot(vrel, collisionData.normal) > 0) return;
 
-            float e = 1.0f;
+            float e = .8f;
 
             float j =  -(1+e)*PhysicsEngine::Vector2Dot(vrel, collisionData.normal);
             float raxn = Vector2Cross(ra, collisionData.normal);
             float rbxn = Vector2Cross(rb, collisionData.normal);
             j/=(a->invMass+b->invMass+(raxn*raxn*a->invMomentInertia)+(rbxn*rbxn*b->invMomentInertia));
+            if (std::isnan(j) || std::isinf(j)) {
+                return;
+            }
             Vector2 Impulse = collisionData.normal * j;
             a->velocity-=Impulse*a->invMass;
             a->angVel-=PhysicsEngine::Vector2Cross(ra, Impulse)*a->invMomentInertia;
             b->velocity+=Impulse*b->invMass;
             b->angVel+=PhysicsEngine::Vector2Cross(rb, Impulse)*b->invMomentInertia;
+
+            float correction = collisionData.depth / (a->invMass + b->invMass);
+            a->position-=(collisionData.normal*correction*a->invMass);
+            b->position+=(collisionData.normal*correction*b->invMass);
         }
     }
 }

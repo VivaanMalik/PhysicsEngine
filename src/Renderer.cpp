@@ -124,7 +124,7 @@ namespace PhysicsEngine {
     }
 
     void Renderer::drawContactPoints(const CollisionData& data) {
-        std::cout << data << std::endl;
+        // std::cout << data << std::endl;
         if (!data.collided || data.contactPoint.empty()) return;
 
         std::vector<Vector2> points;

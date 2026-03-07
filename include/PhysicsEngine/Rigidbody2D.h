@@ -57,6 +57,37 @@ namespace PhysicsEngine {
             worldVertices.resize(localVertices.size());
             updateWorldVertices();
         }
+
+        // static
+        Rigidbody2D(Vector2 pos, float angle, std::vector<PhysicsEngine::Vector2> lv) {
+            mass = 0;
+            invMass = 0;
+            position = pos;
+            velocity = {0, 0};
+            acceleration = {0, 0};
+            momentInertia = 0;
+            invMomentInertia = 0;
+            angPos = angle;
+            angVel = 0;
+            angAccn = 0;
+            torque = 0;
+            force = {0, 0};
+
+            localVertices = lv;
+            for (size_t i = 0; i < localVertices.size(); i++) {
+                Vector2 p1 = localVertices[i];
+                Vector2 p2 = localVertices[(i + 1) % localVertices.size()]; // handle 0 in loop
+                Vector2 edge = { p2.x - p1.x, p2.y - p1.y };
+                Vector2 n = { edge.y, -edge.x }; // normal
+                
+                float len = std::sqrt(n.x * n.x + n.y * n.y); // normalize
+                localNormals.push_back({ n.x / len, n.y / len });
+            }
+
+            worldNormals.resize(localNormals.size());
+            worldVertices.resize(localVertices.size());
+            updateWorldVertices();
+        }
         
         void update(float dt, const PhysicsEngine::WorldBoundaries& wb);
         void updateWorldVertices();

@@ -43,7 +43,7 @@ int main() {
     PhysicsEngine::Renderer renderer;
     PhysicsEngine::CollisionHandler collisionHandler;
 
-    PhysicsEngine::WorldBoundaries world = { 0.0f, 16.0f, 0.0f, 12.0f};
+    PhysicsEngine::WorldBoundaries world = { 0.0f, 16.0f, 0.0f, 12.0f}; // l r b m
     renderer.init(world, screen);
 
     std::vector<PhysicsEngine::Particle> particles = {
@@ -53,9 +53,15 @@ int main() {
     };
 
     std::vector<PhysicsEngine::Rigidbody2D> bodies = {
-        {1, {4, 5}, {10, 10}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0.1, PhysicsEngine::Shapes::Square},
-        {1, {10, 8}, {0, 0}, {0, 0}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
-        {1, {2, 10}, {0, 0}, {0, 0}, 1, 0, 0.1, 0, PhysicsEngine::Shapes::Square}
+        // wb
+        {{0, 6}, 0, PhysicsEngine::Shapes::VWall},
+        {{16, 6}, 0, PhysicsEngine::Shapes::VWall},
+        {{8, 0}, 0, PhysicsEngine::Shapes::HWall},
+        {{8, 12}, 0, PhysicsEngine::Shapes::HWall},
+        // wb
+        {1, {4, 5}, {10, 10}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0, PhysicsEngine::Shapes::Square},
+        {1, {10, 8}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
+        {1, {2, 10}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 0.1, 0, PhysicsEngine::Shapes::Square}
     };
 
     for (auto& b : bodies) {
