@@ -4,6 +4,8 @@
 
 namespace PhysicsEngine {
     struct Rigidbody2D {
+        int ID;
+
         Vector2 position;
         Vector2 velocity;
         Vector2 acceleration;
@@ -28,7 +30,8 @@ namespace PhysicsEngine {
         unsigned int VAO = 0; 
         unsigned int VBO = 0;
 
-        Rigidbody2D(float m, Vector2 pos, Vector2 vel, Vector2 accn, float moi, float angle, float w, float a, std::vector<PhysicsEngine::Vector2> lv) {
+        Rigidbody2D(int id, float m, Vector2 pos, Vector2 vel, Vector2 accn, float moi, float angle, float w, float a, std::vector<PhysicsEngine::Vector2> lv) {
+            ID = id;
             mass = m;
             invMass = (m > 0.0f) ? (1.0f / m) : 0.0f;
             position = pos;
@@ -60,6 +63,7 @@ namespace PhysicsEngine {
 
         // static
         Rigidbody2D(Vector2 pos, float angle, std::vector<PhysicsEngine::Vector2> lv) {
+            ID = -1;
             mass = 0;
             invMass = 0;
             position = pos;
@@ -91,5 +95,12 @@ namespace PhysicsEngine {
         
         void update(float dt, const PhysicsEngine::WorldBoundaries& wb);
         void updateWorldVertices();
+
+        friend std::ostream& operator<<(std::ostream& os, const Rigidbody2D b) {
+            os << "Rigidbody2D ID: " << b.ID;
+            os << "\n    Mass: " << b.mass << "    Position: " << b.position << "    Velocity: " << b.velocity << "    Acceleration: " << b.acceleration;
+            os << "\n    Inertia: " << b.momentInertia << "    Theta: " << b.angPos << "    Omega: " << b.angVel << "    Alpha: " << b.angAccn << "\n";
+            return os;
+        }
     };
 }

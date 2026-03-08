@@ -63,9 +63,10 @@ int main() {
         {{8, -1}, 0, PhysicsEngine::Shapes::HWall},
         {{8, 13}, 0, PhysicsEngine::Shapes::HWall},
         // wb
-        {1, {4, 5}, {10, 10}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0, PhysicsEngine::Shapes::Square},
-        {1, {10, 8}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
-        {1, {2, 10}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 0.1, 0, PhysicsEngine::Shapes::Square}
+        {0, 1, {4, 5}, {10, 10}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0, PhysicsEngine::Shapes::Square},
+        {1, 1, {10, 8}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
+        {2, 1, {2, 10}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 0.1, 0, PhysicsEngine::Shapes::Square}
+        // {1, {1.1f, 6}, {-.01f, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, .01f, 0, 0, PhysicsEngine::Shapes::Square}
     };
 
     for (auto& b : bodies) {
@@ -78,6 +79,7 @@ int main() {
     bool rightArrowPressedLastFrame = false;
     float accumulator = 0.0f;
     auto lastTime = std::chrono::high_resolution_clock::now();
+    std::vector<PhysicsEngine::CollisionData> cDatas;
 
     while (!glfwWindowShouldClose(window)) {
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -104,7 +106,6 @@ int main() {
         spacePressedLastFrame = spacePressed;
         rightArrowPressedLastFrame = rightArrowPressed;
 
-        std::vector<PhysicsEngine::CollisionData> cDatas;
         if (!isPaused || shouldStep) {
             if (!isPaused) {
                 accumulator += frameTime;
@@ -123,6 +124,15 @@ int main() {
 
                 if (shouldStep) break; // 1 iter
             }
+
+            // DEBUG
+            // for (auto& b : bodies) {
+            //     if (b.position.y < 1.0f && b.ID != -1) {
+            //         std::cout << b << std::endl;
+            //         // isPaused = true;
+            //     }
+            // }
+            // DEBUG
         }
 
         glClearColor(0.1f, 0.1f, 0.12f, 1.0f);

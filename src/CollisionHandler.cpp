@@ -64,9 +64,9 @@ namespace PhysicsEngine {
         if (dirn2) clippedPoints.push_back(edge.v2);
 
         // atp either 0, 1, 2. If 1, we want intersection pt
-        if (dirn1*dirn2==0 && clippedPoints.size()<2) {
-            // find intersection pt
-            Vector2 intersectionPt = edge.v2 + (edge.v1-edge.v2) * (dot2/(dot2-dot1));
+        if (dirn1 != dirn2) {
+            float t = dot1 / (dot1 - dot2);
+            Vector2 intersectionPt = edge.v1 + (edge.v2 - edge.v1) * t;
             clippedPoints.push_back(intersectionPt);
         }
 
@@ -91,24 +91,55 @@ namespace PhysicsEngine {
             if (overlap < minOverlap) {
                 minOverlap = overlap;
                 collisionNormal = axis;
+            }
+        }
 
+        float maxDot = 0.0f;
+        int indx = -1;
+        for (int i = 0; i < axes.size(); i++) {
+            float dot = std::abs(PhysicsEngine::Vector2Dot(collisionNormal, axes[i]));
+            if (dot>maxDot) {
+                maxDot = dot;
+                indx = i;
             }
         }
         
         cData.collided = true;
         cData.depth = minOverlap;
 
-        // ensures collision normal in dirn of a to b
-        Vector2 direction = b->position - a->position;
-        if (PhysicsEngine::Vector2Dot(direction, collisionNormal) < 0) {
+        Vector2 bodyAToB = b->position - a->position;
+        if (PhysicsEngine::Vector2Dot(collisionNormal, bodyAToB) < 0) {
             collisionNormal = collisionNormal * -1.0f;
         }
 
+        Rigidbody2D* ref;
+        Rigidbody2D* inc;
+        bool flipped = false;
+
+        float maxDotA = 0;
+        for (Vector2 n : a->worldNormals) {
+            float dot = std::abs(PhysicsEngine::Vector2Dot(collisionNormal, n));
+            if (dot > maxDotA) maxDotA = dot;
+        }
+        float maxDotB = 0;
+        for (Vector2 n : b->worldNormals) {
+            float dot = std::abs(PhysicsEngine::Vector2Dot(collisionNormal, n));
+            if (dot > maxDotB) maxDotB = dot;
+        }
+
+        if (maxDotA >= maxDotB) {
+            ref = a; inc = b;
+        } else {
+            ref = b; inc = a;
+            flipped = true; 
+        }
+        
+        Vector2 refNormal = flipped ? -collisionNormal : collisionNormal;
         cData.normal = collisionNormal;
 
         // clipping and poc
-        Edge refEdge = getBestEdge(a->worldNormals, a->worldVertices, collisionNormal);
-        Edge incEdge = getBestEdge(b->worldNormals, b->worldVertices, -collisionNormal);
+        Edge refEdge = getBestEdge(ref->worldNormals, ref->worldVertices, refNormal);
+        Edge incEdge = getBestEdge(inc->worldNormals, inc->worldVertices, -refNormal);
 
         Vector2 v1 = refEdge.v1;
         Vector2 v2 = refEdge.v2;
@@ -123,7 +154,7 @@ namespace PhysicsEngine {
         clippedPoints = clipEdgeFromNormal({clippedPoints[0], clippedPoints[1]}, -collisionNormal, v1);
 
         for (int i = 0; i < clippedPoints.size(); i++) {
-            cData.contactPoint.push_back({clippedPoints[i], -(PhysicsEngine::Vector2Dot(clippedPoints[i]-v1, collisionNormal))});
+            cData.contactPoint.push_back({clippedPoints[i], -(PhysicsEngine::Vector2Dot(clippedPoints[i]-v1, refNormal))});
         }
 
         return cData;
@@ -137,7 +168,7 @@ namespace PhysicsEngine {
             Vector2 vb = b->velocity+(((Vector2){-rb.y, rb.x})*b->angVel);
             Vector2 vrel = vb-va;
 
-            if (PhysicsEngine::Vector2Dot(vrel, collisionData.normal) > 0) return;
+            if (PhysicsEngine::Vector2Dot(vrel, collisionData.normal) > 0) continue;;
 
             float e = .8f;
 
@@ -155,8 +186,8 @@ namespace PhysicsEngine {
             b->velocity+=Impulse*b->invMass;
             b->angVel+=PhysicsEngine::Vector2Cross(rb, Impulse)*b->invMomentInertia;
 
-            const float percent = 0.2f;
-            const float slop = 0.01f;
+            const float percent = 0.5f;
+            const float slop = 0.0001f;
             if (collisionData.contactPoint[i].depth > slop) {
                 float correctionMag = (collisionData.contactPoint[i].depth / denominator) * percent / (float)collisionData.contactPoint.size();
                 Vector2 correctionVec = collisionData.normal * correctionMag;
