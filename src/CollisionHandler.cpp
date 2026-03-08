@@ -1,12 +1,13 @@
 #include "PhysicsEngine/CollisionHandler.h"
 #include "PhysicsEngine/structs.h"
 #include "PhysicsEngine/Renderer.h"
+#include "PhysicsEngine/Constants.h"
 #include <limits>
 #include <iostream>
 
 namespace PhysicsEngine {
-    bool CollisionHandler::handleCollisions(std::vector<Rigidbody2D>& bodies, PhysicsEngine::Renderer renderer) {
-        bool collision = false;
+    std::vector<CollisionData> CollisionHandler::handleCollisions(std::vector<Rigidbody2D>& bodies, PhysicsEngine::Renderer renderer) {
+        std::vector<CollisionData> datas;
         for (size_t i = 0; i < bodies.size(); ++i) {
             for (size_t j = i + 1; j < bodies.size(); ++j) {
                 Rigidbody2D* a = &bodies[i];
@@ -15,12 +16,12 @@ namespace PhysicsEngine {
                 CollisionData data = checkSAT(a, b);
                 if (data.collided) {
                     renderer.drawContactPoints(data);
-                    collision = true;
+                    datas.push_back(data);
                     resolveCollision(a, b, data);
                 }
             }
         }
-        return collision;
+        return datas;
     }
 
     Vector2 CollisionHandler::projectPolygon(const std::vector<Vector2>& vertices, Vector2 axis) {
@@ -143,19 +144,27 @@ namespace PhysicsEngine {
             float j =  -(1+e)*PhysicsEngine::Vector2Dot(vrel, collisionData.normal);
             float raxn = Vector2Cross(ra, collisionData.normal);
             float rbxn = Vector2Cross(rb, collisionData.normal);
-            j/=(a->invMass+b->invMass+(raxn*raxn*a->invMomentInertia)+(rbxn*rbxn*b->invMomentInertia));
-            if (std::isnan(j) || std::isinf(j)) {
-                return;
-            }
+            float denominator = (a->invMass+b->invMass+(raxn*raxn*a->invMomentInertia)+(rbxn*rbxn*b->invMomentInertia));
+            if (denominator<PhysicsEngine::Constants::EPSILON) continue;
+            j/=denominator;
+            j/=(float)collisionData.contactPoint.size();
+            if (std::isnan(j) || std::isinf(j)) continue;
             Vector2 Impulse = collisionData.normal * j;
             a->velocity-=Impulse*a->invMass;
             a->angVel-=PhysicsEngine::Vector2Cross(ra, Impulse)*a->invMomentInertia;
             b->velocity+=Impulse*b->invMass;
             b->angVel+=PhysicsEngine::Vector2Cross(rb, Impulse)*b->invMomentInertia;
 
-            float correction = collisionData.depth / (a->invMass + b->invMass);
-            a->position-=(collisionData.normal*correction*a->invMass);
-            b->position+=(collisionData.normal*correction*b->invMass);
+            const float percent = 0.2f;
+            const float slop = 0.01f;
+            if (collisionData.contactPoint[i].depth > slop) {
+                float correctionMag = (collisionData.contactPoint[i].depth / denominator) * percent / (float)collisionData.contactPoint.size();
+                Vector2 correctionVec = collisionData.normal * correctionMag;
+                a->position -= correctionVec * a->invMass;
+                a->angPos   -= raxn * correctionMag * a->invMomentInertia;
+                b->position += correctionVec * b->invMass;
+                b->angPos   += rbxn * correctionMag * b->invMomentInertia;
+            }
         }
     }
 }

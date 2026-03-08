@@ -7,7 +7,7 @@
 namespace PhysicsEngine {
     class CollisionHandler {
     public:
-        bool handleCollisions(std::vector<Rigidbody2D>& bodies, PhysicsEngine::Renderer renderer);
+        std::vector<CollisionData> handleCollisions(std::vector<Rigidbody2D>& bodies, PhysicsEngine::Renderer renderer);
         CollisionData checkSAT(Rigidbody2D* a, Rigidbody2D* b);
     private:
         std::vector<Vector2> clipEdgeFromNormal(Edge edge, Vector2 normal, Vector2 offset);      

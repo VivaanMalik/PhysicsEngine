@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <iostream>
-
+#include <chrono>
 #include "PhysicsEngine/Particle.h"
 #include "PhysicsEngine/Rigidbody2D.h"
 #include "PhysicsEngine/Renderer.h"
@@ -32,9 +32,13 @@ int main() {
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
+    bool unlockFPS = false;
+    const float fixedDeltaTime = 1.0f / 120.0f;
+
     int frameWidth, frameHeight;
     glfwGetFramebufferSize(window, &frameWidth, &frameHeight);
     glViewport(0, 0, frameWidth, frameHeight);
+    glfwSwapInterval(0);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -54,10 +58,10 @@ int main() {
 
     std::vector<PhysicsEngine::Rigidbody2D> bodies = {
         // wb
-        {{0, 6}, 0, PhysicsEngine::Shapes::VWall},
-        {{16, 6}, 0, PhysicsEngine::Shapes::VWall},
-        {{8, 0}, 0, PhysicsEngine::Shapes::HWall},
-        {{8, 12}, 0, PhysicsEngine::Shapes::HWall},
+        {{-1, 6}, 0, PhysicsEngine::Shapes::VWall},
+        {{17, 6}, 0, PhysicsEngine::Shapes::VWall},
+        {{8, -1}, 0, PhysicsEngine::Shapes::HWall},
+        {{8, 13}, 0, PhysicsEngine::Shapes::HWall},
         // wb
         {1, {4, 5}, {10, 10}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0, PhysicsEngine::Shapes::Square},
         {1, {10, 8}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
@@ -68,30 +72,59 @@ int main() {
         renderer.initRB2D(b);
     }
 
-    float deltaTime = 0.016f; // 60fps
+    // float deltaTime = 0.016f; // 60fps
     bool isPaused = true;
     bool spacePressedLastFrame = false;
+    bool rightArrowPressedLastFrame = false;
+    float accumulator = 0.0f;
+    auto lastTime = std::chrono::high_resolution_clock::now();
 
     while (!glfwWindowShouldClose(window)) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float frameTime = std::chrono::duration<float>(currentTime - lastTime).count();
+        lastTime = currentTime;
+
+        // if (frameTime > 0.1f) frameTime = 0.1f;
+
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
 
         bool spacePressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+        bool rightArrowPressed = glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
+
         if (spacePressed && !spacePressedLastFrame) {
-            isPaused = !isPaused; // Toggle the state
-        }
-        spacePressedLastFrame = spacePressed;
-
-        if (!isPaused) {
-            for (auto& p : particles) {
-                p.update(deltaTime, world);
-            }
-
-            for (auto& b : bodies) {
-                b.update(deltaTime, world);
-            }
+            isPaused = !isPaused;
         }
         
+        bool shouldStep = false;
+        if (rightArrowPressed && !rightArrowPressedLastFrame) {
+            shouldStep = true;
+        }
+
+        spacePressedLastFrame = spacePressed;
+        rightArrowPressedLastFrame = rightArrowPressed;
+
+        std::vector<PhysicsEngine::CollisionData> cDatas;
+        if (!isPaused || shouldStep) {
+            if (!isPaused) {
+                accumulator += frameTime;
+            } else {
+                accumulator = fixedDeltaTime;
+            }
+
+            accumulator += frameTime;
+            while (accumulator >= fixedDeltaTime) {
+                for (auto& p : particles) p.update(fixedDeltaTime, world);
+                for (auto& b : bodies) b.update(fixedDeltaTime, world);
+                
+                cDatas = collisionHandler.handleCollisions(bodies, renderer);
+                
+                accumulator -= fixedDeltaTime;
+
+                if (shouldStep) break; // 1 iter
+            }
+        }
+
         glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -101,11 +134,12 @@ int main() {
         
         renderer.drawRigidbody2D(bodies, true);
         renderer.drawParticles(particles);
+        for (PhysicsEngine::CollisionData cData : cDatas) renderer.drawContactPoints(cData);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
-        collisionHandler.handleCollisions(bodies, renderer);
+        // collisionHandler.handleCollisions(bodies, renderer);
         
         glfwSwapBuffers(window);
         glfwPollEvents();
