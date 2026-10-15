@@ -2,38 +2,39 @@
 
 A 2D rigid-body physics engine written in **C++20**, featuring polygon collision detection, impulse-based collision response, rotational dynamics, and real-time OpenGL visualization.
 
-The project implements the core physics and collision pipeline directly, while using OpenGL and supporting libraries for rendering, window management, mathematics, and debug overlays.
+The project implements the core physics and collision pipeline, with OpenGL and supporting libraries used for rendering, window management, mathematics, and debug overlays.
 
 ## Features
 
 - **Rigid-body dynamics:** Linear and angular position, velocity, acceleration, force, and torque.
 - **Polygon geometry:** Convex polygon bodies represented by local and world-space vertices and edge normals.
 - **Collision detection:** Separating Axis Theorem (SAT), testing axes derived from both polygons.
-- **Contact generation:** Reference/incident edge selection and edge clipping to generate contact points and penetration depths.
-- **Collision response:** Impulse-based resolution that accounts for linear and angular motion, mass, and moment of inertia.
+- **Contact generation:** Reference/incident edge selection and clipping to generate contact points and penetration depths.
+- **Collision response:** Impulse-based resolution accounting for linear and angular motion, mass, and moment of inertia.
 - **Static bodies:** Zero-mass rigid bodies for walls and other immovable geometry.
-- **Particle simulation:** Particle position and velocity updates under acceleration and applied forces.
-- **OpenGL rendering:** GPU-backed rendering of particles and polygon outlines, with configurable world-to-screen projection.
+- **Particle simulation:** Particle motion under acceleration and applied forces.
+- **OpenGL rendering:** Real-time rendering of particles and polygon outlines.
 - **Debug visualization:** Contact points, vertex indices, and polygon normals.
 - **Simulation controls:** Pause/resume, single-step simulation, and keyboard-driven exit.
-- **Fixed-step physics:** Physics updates use a fixed timestep of 1/120 second.
+- **Fixed-step physics:** Physics updates use a fixed timestep of $1/120$ second.
 
-## Physics and collision pipeline
+## Physics and Collision Pipeline
 
-### 1. Motion integration
+### 1. Motion Integration
 
-Particles and rigid bodies store their physical state and update it over a timestep. Rigid bodies integrate linear and angular motion using acceleration from their stored acceleration, applied force, and torque.
+Particles and rigid bodies update their physical state over a timestep. Rigid bodies integrate linear and angular motion using acceleration from applied forces and torques.
 
-For a body with mass \(m\) and moment of inertia \(I\):
+For a body with mass $m$, moment of inertia $I$, force $F$, and torque $\tau$:
 
-- Force-derived linear acceleration: \(a_F = F/m\)
-- Torque-derived angular acceleration: \(\alpha_\tau = \tau/I\)
+$$
+a = \frac{F}{m}, \qquad \alpha = \frac{\tau}{I}
+$$
 
 The implementation uses inverse mass and inverse moment of inertia, with zero values for static bodies.
 
-### 2. Polygon transformations
+### 2. Polygon Transformations
 
-Each rigid body stores its geometry in local coordinates. Its world-space vertices and normals are updated using the body's rotation and translation, allowing collision detection to operate on the transformed geometry.
+Each rigid body stores its geometry in local coordinates. Its world-space vertices and normals are updated using the body's rotation and translation, allowing collision detection to operate on transformed geometry.
 
 ### 3. Separating Axis Theorem
 
@@ -41,17 +42,17 @@ For each pair of bodies, the collision handler tests the edge normals of both po
 
 If any axis has disjoint projection intervals, the polygons do not intersect. Otherwise, the smallest overlap provides a candidate penetration depth and collision normal.
 
-### 4. Contact generation
+### 4. Contact Generation
 
-The collision handler selects reference and incident edges and clips the incident edge against the reference edge's side planes. The resulting points are used as contact points for collision response and can be visualized by the renderer.
+The collision handler selects reference and incident edges and clips the incident edge against the reference edge's side planes. The resulting points become contact points for collision response and can be visualized by the renderer.
 
-### 5. Impulse-based response
+### 5. Impulse-Based Response
 
-At each contact, the solver computes relative velocity, including the contribution from angular velocity. It calculates a normal impulse using the bodies' inverse masses and inverse moments of inertia, then applies the resulting linear and angular velocity changes.
+At each contact, the solver computes relative velocity, including contributions from angular velocity. It calculates a normal impulse using the bodies' inverse masses and inverse moments of inertia, then applies the resulting linear and angular velocity changes.
 
-The current collision response uses a restitution coefficient of 0.8.
+The current collision response uses a restitution coefficient of $0.8$.
 
-## Tech stack
+## Tech Stack
 
 | Technology | Role |
 |---|---|
@@ -59,52 +60,64 @@ The current collision response uses a restitution coefficient of 0.8.
 | OpenGL 3.3 | Real-time rendering |
 | GLFW | Window and input management |
 | GLAD | OpenGL function loading |
-| GLM | Projection and transformation matrices |
+| GLM | Mathematics and transformation matrices |
 | Dear ImGui | Debug overlay and visualization |
 | CMake | Build configuration |
 
-The physics types, motion integration, polygon transformations, SAT collision detection, contact generation, and impulse response are implemented in the project. The graphics and windowing stack is provided by the libraries above.
+The physics types, motion integration, polygon transformations, SAT collision detection, contact generation, and impulse response are implemented in the project.
 
-## Project structure
+## Project Structure
 
 ```text
 PhysicsEngine/
 ├── include/
 │   └── PhysicsEngine/
-│       ├── CollisionHandler.h  # Collision detection and resolution interface
-│       ├── Constants.h         # Physics and rendering constants
-│       ├── Particle.h          # Particle state and update interface
-│       ├── Renderer.h          # OpenGL renderer interface
-│       ├── Rigidbody2D.h       # Rigid-body state and polygon geometry
-│       ├── Shapes.h            # Polygon and wall geometry
-│       └── structs.h           # Vector2, contacts, collision data, boundaries
+│       ├── CollisionHandler.h
+│       ├── Constants.h
+│       ├── Particle.h
+│       ├── Renderer.h
+│       ├── Rigidbody2D.h
+│       ├── Shapes.h
+│       └── structs.h
 ├── src/
-│   ├── CollisionHandler.cpp    # SAT, contact generation, collision response
-│   ├── Particle.cpp            # Particle integration and boundaries
-│   ├── Renderer.cpp            # OpenGL rendering and debug overlay
-│   └── Rigidbody2D.cpp         # Linear/angular integration and transforms
+│   ├── CollisionHandler.cpp
+│   ├── Particle.cpp
+│   ├── Renderer.cpp
+│   └── Rigidbody2D.cpp
 ├── shaders/
-│   ├── basic.vert              # Vertex shader
-│   └── basic.frag              # Fragment shader
+│   ├── basic.vert
+│   └── basic.frag
 ├── sandbox/
-│   ├── CMakeLists.txt          # Sandbox executable target
-│   └── main.cpp                # Simulation entry point and demo scene
-├── vendor/                     # Third-party graphics dependencies
-├── CMakeLists.txt              # Engine library and project build
-├── buildrun.sh                 # Configure, build, and launch helper
-└── imgui.ini                   # Saved ImGui window layout
+│   ├── CMakeLists.txt
+│   └── main.cpp
+├── vendor/
+├── CMakeLists.txt
+├── buildrun.sh
+└── imgui.ini
 ```
+
+### Key Files
+
+| File | Responsibility |
+|---|---|
+| `CollisionHandler.cpp` | SAT collision detection, contact generation, and collision response |
+| `Rigidbody2D.cpp` | Rigid-body dynamics and polygon transformations |
+| `Particle.cpp` | Particle integration and boundary handling |
+| `Renderer.cpp` | OpenGL rendering and debug visualization |
+| `Shapes.h` | Polygon and wall geometry |
+| `sandbox/main.cpp` | Simulation entry point and demo scene |
+| `shaders/` | Vertex and fragment shaders |
 
 ## Requirements
 
-- A C++ compiler with C++20 support
+- C++ compiler with C++20 support
 - CMake 3.15 or newer
 - Git
-- A desktop graphics environment that supports OpenGL 3.3
+- Desktop graphics environment supporting OpenGL 3.3
 
-GLFW, GLAD, GLM, and Dear ImGui are included under `vendor/`. On Linux, the build may also require system development packages needed by GLFW for your windowing system, such as X11 or Wayland development headers.
+The repository includes graphics dependencies under `vendor/`. On Linux, system development packages required by GLFW may also be necessary.
 
-## Build and run
+## Build and Run
 
 Clone the repository:
 
@@ -113,27 +126,27 @@ git clone https://github.com/VivaanMalik/PhysicsEngine.git
 cd PhysicsEngine
 ```
 
-The repository includes a helper script intended to configure the CMake build, compile the sandbox executable, and launch it:
+The repository includes a helper script for configuring, building, and launching the application:
 
 ```bash
 chmod +x buildrun.sh
 ./buildrun.sh
 ```
 
-Alternatively, build manually:
+Alternatively, build using CMake:
 
 ```bash
 cmake -S . -B build
 cmake --build build --target SandboxApp
 ```
 
-Run the executable from the repository root so that the renderer can find the shader files at `shaders/basic.vert` and `shaders/basic.frag`:
+Run the executable from the repository root so the application can locate its shader files:
 
 ```bash
 ./build/sandbox/SandboxApp
 ```
 
-If your generator places the executable elsewhere, use the corresponding path under `build/`.
+The executable's location may vary depending on the CMake generator and target configuration.
 
 ## Controls
 
@@ -141,17 +154,17 @@ If your generator places the executable elsewhere, use the corresponding path un
 |---|---|
 | `Space` | Pause or resume the simulation |
 | `Right Arrow` | Advance one physics step while paused |
-| `Esc` | Close the application |
+| `Esc` | Exit the application |
 
-## Current scope and limitations
+## Current Scope and Limitations
 
-This repository is a work in progress and currently focuses on 2D polygon rigid bodies and particle motion. The demo scene initializes dynamic square bodies and static wall geometry.
+The project focuses on 2D polygon rigid bodies and particle motion. The demo initializes dynamic square bodies and static wall geometry.
 
-The current implementation should not be interpreted as a complete production physics engine. In particular:
+Current limitations include:
 
-- Collision handling checks body pairs directly, so pair checks grow quadratically with the number of bodies.
-- A general-purpose broad-phase collision system is not currently included.
-- A configurable friction/material model is not currently exposed.
+- Collision handling checks body pairs directly, resulting in $O(N^2)$ pair checks for $N$ bodies.
+- A general-purpose broad-phase collision system is not included.
+- A configurable friction and material model is not currently exposed.
 - A comprehensive automated test suite is not currently included.
 
 ## License

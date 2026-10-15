@@ -201,8 +201,8 @@ namespace PhysicsEngine {
                     Vector2 v = body.worldVertices[i];
                     
                     // Draw Vertex Index
-                    std::string label = std::to_string(i);
                     Vector2 vPixelPos = worldToPixels(v);
+                    std::string label = std::to_string(i);
                     ImGui::GetForegroundDrawList()->AddText(
                         ImVec2(vPixelPos.x, vPixelPos.y), 
                         IM_COL32(255, 255, 0, 255), 

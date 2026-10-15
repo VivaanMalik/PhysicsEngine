@@ -170,7 +170,11 @@ namespace PhysicsEngine {
 
             if (PhysicsEngine::Vector2Dot(vrel, collisionData.normal) > 0) continue;;
 
-            float e = .8f;
+            float e = 1.0f;
+
+            if (std::abs(PhysicsEngine::Vector2Dot(vrel, collisionData.normal)) < 0.1f) {
+                e = 0.0f;
+            }
 
             float j =  -(1+e)*PhysicsEngine::Vector2Dot(vrel, collisionData.normal);
             float raxn = Vector2Cross(ra, collisionData.normal);
@@ -188,6 +192,7 @@ namespace PhysicsEngine {
 
             const float percent = 0.5f;
             const float slop = 0.0001f;
+            // float linearDenominator = a->invMass + b->invMass;
             if (collisionData.contactPoint[i].depth > slop) {
                 float correctionMag = (collisionData.contactPoint[i].depth / denominator) * percent / (float)collisionData.contactPoint.size();
                 Vector2 correctionVec = collisionData.normal * correctionMag;

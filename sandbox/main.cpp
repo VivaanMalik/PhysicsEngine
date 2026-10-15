@@ -21,7 +21,8 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    PhysicsEngine::Vector2 screen = {800, 600};
+    // PhysicsEngine::Vector2 screen = {1600, 600};
+    PhysicsEngine::Vector2 screen = {1120, 840};
 
     GLFWwindow* window = glfwCreateWindow(screen.x, screen.y, "My Physics Engine", NULL, NULL);
     if (window == NULL) {
@@ -56,18 +57,69 @@ int main() {
         {1, {8, 1}, {0, 0}, {-1, -1}}
     };
 
-    std::vector<PhysicsEngine::Rigidbody2D> bodies = {
-        // wb
-        {{-1, 6}, 0, PhysicsEngine::Shapes::VWall},
-        {{17, 6}, 0, PhysicsEngine::Shapes::VWall},
-        {{8, -1}, 0, PhysicsEngine::Shapes::HWall},
-        {{8, 13}, 0, PhysicsEngine::Shapes::HWall},
-        // wb
-        {0, 1, {4, 5}, {10, 10}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0, PhysicsEngine::Shapes::Square},
-        {1, 1, {10, 8}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
-        {2, 1, {2, 10}, {0, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, 0, 0.1, 0, PhysicsEngine::Shapes::Square}
-        // {1, {1.1f, 6}, {-.01f, 0}, {0, PhysicsEngine::Constants::GRAVITY_EARTH}, 1, .01f, 0, 0, PhysicsEngine::Shapes::Square}
-    };
+    std::vector<PhysicsEngine::Rigidbody2D> bodies;
+
+    int scene = 1;
+
+    switch (scene)
+    {
+        case 1:
+            // Scene 1
+            bodies = {
+                // wb
+                {{-1, 6}, 0, PhysicsEngine::Shapes::VWall},
+                {{17, 6}, 0, PhysicsEngine::Shapes::VWall},
+                {{8, -1}, 0, PhysicsEngine::Shapes::HWall},
+                {{8, 13}, 0, PhysicsEngine::Shapes::HWall},
+                // wb
+                {0, 1, {4, 5}, {100, 10}, {0, 0}, 14, 45*PhysicsEngine::Constants::DEG2RAD, -2, 0, PhysicsEngine::Shapes::Square},
+                {1, 1, {10, 8}, {2, 3}, {0, 0}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
+                {2, 1, {2, 10}, {-5, 3}, {0, 0}, 1, 0, 0.1, 0, PhysicsEngine::Shapes::Square},
+                {0, 1, {4, 6}, {1, -1}, {0, 0}, 1, 90*PhysicsEngine::Constants::DEG2RAD, 1, 0, PhysicsEngine::Shapes::Square},
+                {4, 2, {7, 8}, {8, 1}, {0, 0}, 1, 0, 1, 0, PhysicsEngine::Shapes::Square},
+                {2, 8, {2, 10}, {-5, 2}, {0, 0}, 1, 0, 0.1, 0, PhysicsEngine::Shapes::Square},
+                {11, 2, {3, 6}, {1, 0}, {0, 0}, 1, 90*PhysicsEngine::Constants::DEG2RAD, 1, 0, PhysicsEngine::Shapes::Square},
+                {5, 3, {8, 4}, {-2, 5}, {0, 0}, 2, 30*PhysicsEngine::Constants::DEG2RAD, -0.5, 0, PhysicsEngine::Shapes::Square},
+                {6, 1, {12, 11}, {0, -4}, {0, 0}, 1, 0, 2, 0, PhysicsEngine::Shapes::Square},
+                {7, 5, {15, 2}, {-8, 2}, {0, 0}, 5, 180*PhysicsEngine::Constants::DEG2RAD, -1, 0, PhysicsEngine::Shapes::Square},
+                {8, 2, {1, 1}, {5, 5}, {0, 0}, 1.5, 0, 0, 0, PhysicsEngine::Shapes::Square},
+                {9, 4, {6, 9}, {3, -2}, {0, 0}, 4, 60*PhysicsEngine::Constants::DEG2RAD, 1.5, 0, PhysicsEngine::Shapes::Square},
+                {10, 1, {14, 6}, {-1, -1}, {0, 0}, 1, 0, -0.1, 0, PhysicsEngine::Shapes::Square},
+                {3, 6, {9, 2}, {4, 7}, {0, 0}, 6, 120*PhysicsEngine::Constants::DEG2RAD, 0.5, 0, PhysicsEngine::Shapes::Square},
+                {0, 2, {5, 11}, {-3, -3}, {0, 0}, 2, 0, -1.2, 0, PhysicsEngine::Shapes::Square},
+                {1, 1, {11, 4}, {2, 0}, {0, 0}, 1, 45*PhysicsEngine::Constants::DEG2RAD, 2.5, 0, PhysicsEngine::Shapes::Square},
+                {2, 3, {2, 3}, {6, -4}, {0, 0}, 3, 0, 0.8, 0, PhysicsEngine::Shapes::Square},
+                {4, 8, {13, 10}, {-4, -2}, {0, 0}, 8, 270*PhysicsEngine::Constants::DEG2RAD, -2, 0, PhysicsEngine::Shapes::Square},
+                {5, 1, {7, 7}, {0, 5}, {0, 0}, 1, 0, 0, 0, PhysicsEngine::Shapes::Square},
+                {11, 4, {4, 1}, {5, 8}, {0, 0}, 4, 15*PhysicsEngine::Constants::DEG2RAD, 0.2, 0, PhysicsEngine::Shapes::Square}
+            };
+            break;
+        
+        case 2:
+            // Scene 2
+            bodies = {
+                // wb
+                {{-1, 6}, 0, PhysicsEngine::Shapes::VWall},
+                {{17, 6}, 0, PhysicsEngine::Shapes::VWall},
+                {{8, -1}, 0, PhysicsEngine::Shapes::HWall},
+                {{8, 13}, 0, PhysicsEngine::Shapes::HWall},
+                // wb
+                {0, 1, {6, 6}, {0, 0}, {0, 0}, 1, 0, 0, 0, PhysicsEngine::Shapes::Square},
+                {0, 100, {10, 6}, {-1, 0}, {0, 0}, 1, 0, 0, 0, PhysicsEngine::Shapes::Square},
+            };
+            break;
+        case 3:
+            bodies = {
+                // wb
+                {{-1, 6}, 0, PhysicsEngine::Shapes::VWall},
+                {{17, 6}, 0, PhysicsEngine::Shapes::VWall},
+                {{8, -1}, 0, PhysicsEngine::Shapes::HWall},
+                {{8, 13}, 0, PhysicsEngine::Shapes::HWall},
+                // wb
+                {0, 1, {4, 6}, {0, 0}, {0, 0}, 1, 90*PhysicsEngine::Constants::DEG2RAD, 1, 0, PhysicsEngine::Shapes::Square}
+            };
+            break;
+    }
 
     for (auto& b : bodies) {
         renderer.initRB2D(b);
@@ -113,7 +165,6 @@ int main() {
                 accumulator = fixedDeltaTime;
             }
 
-            accumulator += frameTime;
             while (accumulator >= fixedDeltaTime) {
                 for (auto& p : particles) p.update(fixedDeltaTime, world);
                 for (auto& b : bodies) b.update(fixedDeltaTime, world);
